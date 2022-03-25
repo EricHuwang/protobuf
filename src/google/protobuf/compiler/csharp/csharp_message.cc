@@ -128,7 +128,7 @@ void MessageGenerator::Generate(io::Printer* printer) {
     printer->Print(vars, "pb::IExtendableMessage<$class_name$>\n");
   }
   else {
-    printer->Print(vars, "pb::IMessage<$class_name$>\n");
+    printer->Print(vars, "pb::IMessage<$class_name$>, pb::IMessageCustom<$class_name$>\n");
   }
   printer->Print("#if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE\n");
   printer->Print("    , pb::IBufferMessage\n");
@@ -199,11 +199,16 @@ void MessageGenerator::Generate(io::Printer* printer) {
   printer->Print(
     vars,
     "public $class_name$() {\n"
-    "  OnConstruction();\n"
+    "  OnConstruction();\n");
+  printer->Indent();
+  GenerateInitCode(printer);
+  printer->Outdent();
+  printer->Print(
     "}\n\n"
     "partial void OnConstruction();\n\n");
 
   GenerateCloningCode(printer);
+  GenerateCopyCode(printer);
   GenerateFreezingCode(printer);
 
   // Fields/properties
@@ -353,9 +358,14 @@ void MessageGenerator::Generate(io::Printer* printer) {
       "\n");
   }
 
+  // Generate Pool
+  printer->Print("\nprivate static pb::MessagePool<$class_name$> pool_;\n",
+    "class_name", class_name());
+
   printer->Outdent();
   printer->Print("}\n");
   printer->Print("\n");
+
 }
 
 // Helper to work out whether we need to generate a class to hold nested types/enums.
@@ -371,6 +381,18 @@ bool MessageGenerator::HasNestedGeneratedTypes()
     }
   }
   return false;
+}
+
+void MessageGenerator::GenerateInitCode(io::Printer* printer)
+{
+  for (int i = 0; i < descriptor_->field_count(); i++) {
+    const FieldDescriptor* fieldDescriptor = descriptor_->field(i);
+    std::unique_ptr<FieldGeneratorBase> generator(CreateFieldGeneratorInternal(fieldDescriptor));
+    if (fieldDescriptor->type() == FieldDescriptor::Type::TYPE_MESSAGE &&
+      fieldDescriptor->label() != FieldDescriptorProto_Label::FieldDescriptorProto_Label_LABEL_REPEATED) {
+      generator->GenerateInitCode(printer);
+    }
+  }
 }
 
 void MessageGenerator::GenerateCloningCode(io::Printer* printer) {
@@ -432,6 +454,22 @@ void MessageGenerator::GenerateCloningCode(io::Printer* printer) {
     "public $class_name$ Clone() {\n"
     "  return new $class_name$(this);\n"
     "}\n\n");
+}
+
+void MessageGenerator::GenerateCopyCode(io::Printer* printer) {
+  WriteGeneratedCodeAttributes(printer);
+  printer->Print("public void Copy($class_name$ other) {\n",
+    "class_name", class_name());
+  printer->Indent();
+
+  for (int i = 0; i < descriptor_->field_count(); i++) {
+    const FieldDescriptor* field = descriptor_->field(i);
+    std::unique_ptr<FieldGeneratorBase> generator(CreateFieldGeneratorInternal(field));
+    generator->GenerateCopyCode(printer);
+  }
+
+  printer->Outdent();
+  printer->Print("}\n\n");
 }
 
 void MessageGenerator::GenerateFreezingCode(io::Printer* printer) {
@@ -564,6 +602,21 @@ void MessageGenerator::GenerateMessageSerializationMethods(io::Printer* printer)
     "}\n");
 
   printer->Print("return size;\n");
+  printer->Outdent();
+  printer->Print("}\n\n");
+
+  WriteGeneratedCodeAttributes(printer);
+  printer->Print(
+    "public void Clear() {\n");
+  printer->Indent();
+  for (int i = 0; i < descriptor_->field_count(); i++) {
+      const FieldDescriptor* field = descriptor_->field(i);
+      if (field->real_containing_oneof()) {
+          continue;
+      }
+      std::unique_ptr<FieldGeneratorBase> generator(CreateFieldGeneratorInternal(field));
+      generator->GenerateClearCode(printer);
+  }
   printer->Outdent();
   printer->Print("}\n\n");
 }

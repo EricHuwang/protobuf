@@ -60,6 +60,9 @@ class MapFieldGenerator : public FieldGeneratorBase {
   virtual void GenerateSerializationCode(io::Printer* printer) override;
   virtual void GenerateSerializationCode(io::Printer* printer, bool use_write_context) override;
   virtual void GenerateSerializedSizeCode(io::Printer* printer) override;
+  virtual void GenerateClearCode(io::Printer* printer);
+  virtual void GenerateCopyCode(io::Printer* printer);
+  virtual void GenerateInitCode(io::Printer* printer);
 
   virtual void WriteHash(io::Printer* printer) override;
   virtual void WriteEquals(io::Printer* printer) override;

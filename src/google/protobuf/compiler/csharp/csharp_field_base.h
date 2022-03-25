@@ -65,6 +65,9 @@ class FieldGeneratorBase : public SourceGeneratorBase {
   virtual void GenerateSerializationCode(io::Printer* printer) = 0;
   virtual void GenerateSerializationCode(io::Printer* printer, bool use_write_context);
   virtual void GenerateSerializedSizeCode(io::Printer* printer) = 0;
+  virtual void GenerateClearCode(io::Printer* printer) = 0;
+  virtual void GenerateCopyCode(io::Printer* printer) = 0;
+  virtual void GenerateInitCode(io::Printer* printer) = 0;
 
   virtual void WriteHash(io::Printer* printer) = 0;
   virtual void WriteEquals(io::Printer* printer) = 0;

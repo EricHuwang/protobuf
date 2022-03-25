@@ -184,6 +184,29 @@ void MessageFieldGenerator::GenerateExtensionCode(io::Printer* printer) {
   GenerateCodecCode(printer);
   printer->Print(");\n");
 }
+
+void MessageFieldGenerator::GenerateClearCode(io::Printer* printer) {
+  printer->Print(
+    variables_,
+    "if ($has_property_check$) {\n"
+    "  $property_name$.Clear();\n"
+    "}\n");
+}
+
+void MessageFieldGenerator::GenerateCopyCode(io::Printer* printer) {
+  printer->Print(
+    variables_,
+    "if ($has_property_check$) {\n"
+    "  $name$_.Copy(other.$property_name$);\n"
+    "}\n");
+}
+
+void MessageFieldGenerator::GenerateInitCode(io::Printer* printer) {
+  printer->Print(
+    variables_,
+    "$name$_ = new $type_name$();\n");
+}
+
 void MessageFieldGenerator::GenerateCloningCode(io::Printer* printer) {
   printer->Print(variables_,
     "$name$_ = other.$has_property_check$ ? other.$name$_.Clone() : null;\n");

@@ -209,6 +209,19 @@ void WrapperFieldGenerator::GenerateExtensionCode(io::Printer* printer) {
   printer->Print(");\n");
 }
 
+void WrapperFieldGenerator::GenerateClearCode(io::Printer* printer) {
+  printer->Print(variables_,
+    "$property_name$ = $default_value$;\n");
+}
+
+void WrapperFieldGenerator::GenerateCopyCode(io::Printer* printer) {
+  printer->Print(variables_,
+    "$property_name$ = other.$property_name$;\n");
+}
+
+void WrapperFieldGenerator::GenerateInitCode(io::Printer* printer) {
+}
+
 WrapperOneofFieldGenerator::WrapperOneofFieldGenerator(
     const FieldDescriptor* descriptor, int presenceIndex, const Options *options)
     : WrapperFieldGenerator(descriptor, presenceIndex, options) {

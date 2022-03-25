@@ -120,6 +120,7 @@ namespace Google.Protobuf.Collections
             // iteration.
             uint tag = ctx.state.lastTag;
             var reader = codec.ValueReader;
+
             // Non-nullable value types can be packed or not.
             if (FieldCodec<T>.IsPackedRepeatedField(tag))
             {
@@ -162,7 +163,16 @@ namespace Google.Protobuf.Collections
                 // Not packed... (possibly not packable)
                 do
                 {
-                    Add(reader(ref ctx));
+                    if (count < array.Length && array[count] != null)
+                    {
+                        var item = array[count];
+                        ctx.ReadMessage((IMessage)item);
+                        count++;
+                    }
+                    else
+                    {
+                        Add(reader(ref ctx));
+                    }
                 } while (ParsingPrimitives.MaybeConsumeTag(ref ctx.buffer, ref ctx.state, tag));
             }
         }
@@ -343,7 +353,7 @@ namespace Google.Protobuf.Collections
         /// </summary>
         public void Clear()
         {
-            array = EmptyArray;
+            //array = EmptyArray;
             count = 0;
         }
 
@@ -642,7 +652,7 @@ namespace Google.Protobuf.Collections
             }
         }
 
-        #region Explicit interface implementation for IList and ICollection.
+#region Explicit interface implementation for IList and ICollection.
         bool IList.IsFixedSize => false;
 
         void ICollection.CopyTo(Array array, int index)
@@ -693,6 +703,6 @@ namespace Google.Protobuf.Collections
             }
             Remove((T)value);
         }
-        #endregion        
+#endregion
     }
 }
